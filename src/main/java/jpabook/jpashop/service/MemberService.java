@@ -44,4 +44,15 @@ public class MemberService {
     public Member findOne(Long memberId) {
         return memberRepository.findOne(memberId);
     }
+
+    // 회원 수정
+    // CQRS~ 커맨드와 쿼리를 분리하자
+    @Transactional
+    public void update(Long id, String name) {
+        // 영속성 컨텍스트에서 끌어온다~
+        Member member = memberRepository.findOne(id);
+        // 영속 상태의 member를 베꿔줌
+        member.setName(name);
+        // 트랜잭션 어노테이션이 끝나는 시점에 jpa가 flush~ 영속성 컨텍스트가 commit~
+    }
 }
