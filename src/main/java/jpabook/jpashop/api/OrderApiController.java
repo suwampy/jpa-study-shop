@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -61,12 +62,25 @@ public class OrderApiController {
          * 이 예에서 order가 컬렉션 페치 조인 때문에 중복 조회 되는 것을 막아줌
          * 단점 -> 페이징 불가
          * */
-       List<Order> orders = orderRepository.findAllWithItem();
+        List<Order> orders = orderRepository.findAllWithItem();
         List<OrderDto> collect = orders.stream()
-                .map(o -> new OrderDto(o))
+                .map(OrderDto::new)
                 .collect(Collectors.toList());
         return collect;
 
+    }
+
+    @GetMapping("/api/v3.1/orders")
+    public List<OrderDto> ordersV3_page(
+            @RequestParam(value="offset",defaultValue="0") int offset,
+            @RequestParam(value="limit",defaultValue="100") int limit){
+        // ToOne 관계에 걸리는 넘들은 페치 조인으로
+        List<Order> orders = orderRepository.findAllWithMemberDelivery(offset,limit);
+
+        List<OrderDto> result = orders.stream()
+                .map(OrderDto::new)
+                .collect(Collectors.toList());
+        return result;
     }
 
     static class OrderDto {
