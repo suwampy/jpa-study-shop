@@ -42,6 +42,33 @@ public class OrderApiController {
         return collect;
     }
 
+    @GetMapping("/api/v3/orders")
+    public List<OrderDto> orderV3(){
+        /**
+         *         return em.createQuery(
+         *                 "select distinct o from Order o" +
+         *                         " join fetch o.member m" +
+         *                         " join fetch o.delivery d" +
+         *                         " join fetch o.orderItems oi" +
+         *                         " join fetch oi.item i", Order.class)
+         *                 .getResultList();
+         *
+         * -> 패치 조인으로 sQL이 1번만 실행됨
+         * distinct를 사용한 이유는 1대 다 조인이 있으므로 데이터베이스 row가 증가
+         * 그 결과 같은 order 엔티티의 조회 수도 증가하게 됨
+         * JPA 의 distinct 는 SQL 에 distinct 를 추가하고 더해서 같은 엔티티가 조회되면
+         * 애플리케이션에서 중복을 걸러줌
+         * 이 예에서 order가 컬렉션 페치 조인 때문에 중복 조회 되는 것을 막아줌
+         * 단점 -> 페이징 불가
+         * */
+       List<Order> orders = orderRepository.findAllWithItem();
+        List<OrderDto> collect = orders.stream()
+                .map(o -> new OrderDto(o))
+                .collect(Collectors.toList());
+        return collect;
+
+    }
+
     static class OrderDto {
         private Long orderId;
         private String name;
