@@ -1,5 +1,6 @@
 package jpabook.jpashop.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jpabook.jpashop.domain.item.Delivery;
 import jpabook.jpashop.domain.item.DeliveryStatus;
 import lombok.Getter;
