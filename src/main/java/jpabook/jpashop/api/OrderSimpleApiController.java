@@ -1,13 +1,18 @@
 package jpabook.jpashop.api;
 
+import jpabook.jpashop.domain.Address;
 import jpabook.jpashop.domain.Order;
+import jpabook.jpashop.domain.OrderStatus;
 import jpabook.jpashop.repository.OrderRepository;
 import jpabook.jpashop.repository.OrderSearch;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * XToOne(ManyToOne, OneToOne)
@@ -51,5 +56,48 @@ public class OrderSimpleApiController {
          * order 와 관련된 모든 entity 에 대한 쿼리가 나가게 되고....
          * 성능상으로도 안좋은 영향을 끼침
          * * */
+    }
+
+    /**
+     * 2. 엔티티를 DTO로 반환
+     * */
+    @GetMapping("/api/v2/simple-orders")
+    public List<SimpleOrderDto> ordersV2(){
+        /*
+         * Lazy 로딩으로 인한 불필요한 entity 호출 문제
+         * 테이블 3개가 조회됨..
+         * order, delivery
+         * */
+
+        /*
+         * 쿼리가 총 1+ N + N번 실행된다
+         * N + 1 -> 1 + 회원 N + 배송 N
+         * order 조회 1번
+         * order -> member 지연 로딩 조회 N번
+         * order -> delivery 지연 로딩 조회 N번
+         * */
+        List<Order> orders = orderRepository.findAllByString(new OrderSearch());
+
+        // DTO 타입으로 바꾸자
+        return orders.stream()
+                .map(SimpleOrderDto::new)
+                .collect(Collectors.toList());
+    }
+
+    @Data
+    static class SimpleOrderDto {
+        private Long orderId;
+        private String name;
+        private LocalDateTime orderDate;
+        private OrderStatus orderStatus;
+        private Address address;
+
+        public SimpleOrderDto(Order order) {
+            orderId = order.getId();
+            name = order.getMember().getName(); // LAZY 초기화
+            orderDate = order.getOrderDate();
+            orderStatus = order.getStatus();
+            address = order.getDelivery().getAddress(); // LAZY 초기화
+        }
     }
 }
