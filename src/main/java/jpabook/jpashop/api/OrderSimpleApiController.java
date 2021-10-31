@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -84,7 +85,20 @@ public class OrderSimpleApiController {
                 .collect(Collectors.toList());
     }
 
-    @Data
+    /*
+    * 3. fetch 조인으로 성능 최적화
+         select o from Order o
+         join fetch o.member m
+        join fetch o.delivery d
+    * 쿼리가 한 번 나감!!
+    * */
+    public List<SimpleOrderDto> orderV3() {
+        List<Order> orders = orderRepository.findAllWithMemberDelivery();
+        return orders.stream()
+                .map(o->new SimpleOrderDto(o))
+                .collect(Collectors.toList());
+    }
+   @Data
     static class SimpleOrderDto {
         private Long orderId;
         private String name;
